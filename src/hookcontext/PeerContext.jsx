@@ -59,7 +59,15 @@ export const PeerContextProvider = (props) => {
 
     }
 
-    const value = { peer, createOffer, createAnswer, setRemoteAnswer };
+    const sendStream = async (stream) =>{
+        const tracks = stream.getTracks();
+        for (const track of tracks){
+            peer.addTrack(track, stream);
+        }
+
+    }
+
+    const value = { peer, createOffer, createAnswer, setRemoteAnswer, sendStream };
 
     return (
         <PeerContext.Provider value={value}>

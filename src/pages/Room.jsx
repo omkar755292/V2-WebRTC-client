@@ -1,36 +1,41 @@
-import React, { useCallback, useEffect } from 'react';
-import { useSocketContext } from '../hookcontext/SocketContext';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { usePeerContext } from '../hookcontext/PeerContext';
+import { useSocketContext } from '../hookcontext/SocketContext';
+
 
 const RoomPage = () => {
-
-  const userEmail = localStorage.getItem('userEmail');
+  const { roomId } = useParams();
+  const { peer, createOffer, createAnswer, setRemoteAnswer, sendStream } = usePeerContext();
   const { socket } = useSocketContext();
-  const { peer, createOffer, createAnswer, setRemoteAnswer } = usePeerContext();
+  const myId = socket.id;
+  const userEmail = localStorage.getItem('userEmail');
 
   const handleUserConnected = useCallback(async (data) => {
     console.log('User connected:', data);
-    const { id, email } = data;
+    const { userId, email } = data;
 
     const offer = await createOffer();
-    socket.emit('call-user', { email, id, offer, userEmail });
+    socket.emit('call-user', { callerId: myId, fromEmail: userEmail, email: email, userId, offer });
 
   }, [createOffer, socket]);
 
   const handleIncomingCall = useCallback(async (data) => {
     console.log('Incomming call:', data);
-    const { fromEmail, offer } = data;
+    const { fromEmail, callerId, offer } = data;
 
     const answer = await createAnswer(offer);
-    socket.emit('call-accepted', { emailId: fromEmail, answer })
+    socket.emit('call-accepted', { userEmail, answer, callerId })
 
+ 
   }, [socket, createAnswer]);
 
   const handleCallAccepted = useCallback(async (data) => {
     console.log('call Accepted:', data);
-    const { answer } = data;
+    const { answer, userId, email } = data;
 
     await setRemoteAnswer(answer);
+
 
   }, [socket]);
 
@@ -47,9 +52,15 @@ const RoomPage = () => {
     };
   }, [socket, handleUserConnected, handleIncomingCall, handleCallAccepted]);
 
+
   return (
     <div className="relative flex flex-col items-center justify-center h-screen bg-gray-800">
-      user Joined to room
+      <>
+
+        <div className="absolute bottom-4 left-4 text-gray-700 dark:text-gray-400 bg-white dark:bg-gray-700 p-2 rounded-lg shadow-md z-20">
+          <span className="mr-2">Meeting Code: {roomId}</span>
+        </div>
+      </>
     </div >
   );
 };
