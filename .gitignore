@@ -1,3 +1,10 @@
+/node_modules
+/webrtc-backend
+.env
+deploy.sh
+setup.sh
+
+
 # Logs
 logs
 *.log
